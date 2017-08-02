@@ -63,6 +63,8 @@ namespace Emmaus.Widget
             Initialize(context,attrs,0);
         }
 
+        
+
         private void Initialize(Context context, IAttributeSet attrs, int defStyle)
         {
             initAttrs(context, attrs, defStyle);
@@ -242,7 +244,8 @@ namespace Emmaus.Widget
             {
                 // exclude item decoration
              var linearSmoothScroller =
-                        new RecyclerLinearSmoothScroller(Context, this);
+                        new RecyclerLinearSmoothScroller(Context);
+                linearSmoothScroller.SetParent(this);
 
                 linearSmoothScroller.TargetPosition = position;
                 if (position == RecyclerView.NoPosition)
@@ -263,14 +266,29 @@ namespace Emmaus.Widget
         public class RecyclerLinearSmoothScroller : LinearSmoothScroller
         {
             RecyclerViewPager mParent;
-            public RecyclerLinearSmoothScroller(Context context, RecyclerViewPager parent) : base(context)
+            public RecyclerLinearSmoothScroller(Context context) : base(context)
+            {
+                
+            }
+
+            public void SetParent(RecyclerViewPager parent)
             {
                 mParent = parent;
             }
             public override PointF ComputeScrollVectorForPosition(int targetPosition)
             {
-                throw new NotImplementedException();
+                int currentPosition = mParent.mPositionBeforeScroll;
+                if (currentPosition < targetPosition)
+                {
+                    return new PointF(1, 0);
+                }
+                else
+                {
+                    return new PointF(-1, 0);
+                }
             }
+
+            
             protected override void OnTargetFound(View targetView, State state, Action action)
             {
                 if (LayoutManager == null)
@@ -310,8 +328,12 @@ namespace Emmaus.Widget
             }
 
             protected override float CalculateSpeedPerPixel(DisplayMetrics displayMetrics)
-            {
+            {   
+                if(mParent != null)
                 return mParent.mMillisecondsPerInch / (float)displayMetrics.DensityDpi;
+
+                return base.CalculateSpeedPerPixel(displayMetrics);
+
             }
 
             protected override void OnStop()
@@ -374,7 +396,7 @@ namespace Emmaus.Widget
             }
         }
 
-        private int ItemCount
+        public int ItemCount
         {
             get
             {
